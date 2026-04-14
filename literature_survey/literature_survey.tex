@@ -1,0 +1,847 @@
+%% ═══════════════════════════════════════════════════════════════════════
+%%  Literature Survey
+%%  Title: Channel Aging in Cell-Free Massive MIMO
+%%  Font : Computer Modern (= CMU Serif — identical typeface)
+%%  Colour: Black only
+%%  Compiler: pdflatex
+%% ═══════════════════════════════════════════════════════════════════════
+\documentclass[12pt,a4paper]{article}
+
+%% ── Font & Encoding ──────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+%% Computer Modern is the same typeface family as CMU Serif (CMU Serif is
+%% the OpenType packaging of Computer Modern). The output is visually identical.
+
+%% ── Page Layout ──────────────────────────────────────────────────────
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.8cm,right=2.8cm]{geometry}
+
+%% ── Math ─────────────────────────────────────────────────────────────
+\usepackage{amsmath,amssymb}
+
+%% ── Graphics & Figures ───────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+
+%% ── Tables ───────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{multirow}
+
+%% ── Typography & Layout ──────────────────────────────────────────────
+\usepackage{setspace}
+
+\usepackage{parskip}
+\usepackage{enumitem}
+
+%% ── Section Formatting ───────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.6em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+%% ── References & Links ───────────────────────────────────────────────
+\usepackage[hidelinks]{hyperref}
+\usepackage{cite}
+
+%% ── Spacing ──────────────────────────────────────────────────────────
+\onehalfspacing
+
+%% ── Math Macros ──────────────────────────────────────────────────────
+\newcommand{\bH}{\mathbf{H}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\bF}{\mathbf{F}}
+\newcommand{\bK}{\mathbf{K}}
+\newcommand{\bR}{\mathbf{R}}
+\newcommand{\bY}{\mathbf{Y}}
+\newcommand{\bPhi}{\boldsymbol{\Phi}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bA}{\mathbf{A}}
+
+%% ═══════════════════════════════════════════════════════════════════════
+\begin{document}
+
+%% ── Title Page ────────────────────────────────────────────────────────
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\LARGE\bfseries Literature Survey}\\[0.6em]
+  \rule{\linewidth}{0.8pt}\\[0.8em]
+  {\Large\bfseries Channel Aging in Cell-Free Massive MIMO:\\[0.5em]
+   Towards Lightweight, Predictive CNN-Based\\[0.5em]
+   Channel State Estimation for 6G Networks}\\[0.8em]
+  \rule{\linewidth}{0.8pt}\\[2.0cm]
+
+  {\normalsize\itshape
+  Research Domain: AI-Native Physical Layer Design\\[0.3em]
+  Research Area: 6G Wireless Communications}\\[2.5cm]
+
+  \begin{minipage}{0.85\linewidth}
+    \centering
+    {\small\textbf{Refined Problem Statement:}}\\[0.5em]
+    {\small\itshape
+    ``Multi-step forward channel state prediction in distributed
+    cell-free massive MIMO networks using computationally efficient
+    CNNs designed for spatially irregular access point topologies,
+    targeting real-time channel aging mitigation under high user
+    mobility.''}
+  \end{minipage}
+
+  \vfill
+  {\small\today}
+\end{titlepage}
+
+%% ── Abstract ──────────────────────────────────────────────────────────
+\begin{abstract}
+\noindent
+This literature survey examines the problem of channel aging in
+cell-free massive multiple-input multiple-output (MIMO) systems and
+surveys existing approaches for mitigating it through channel prediction.
+Beginning with foundational work on massive MIMO channel estimation,
+the survey traces the evolution from classical model-based predictors
+--- including autoregressive (AR) models and Kalman filters --- through
+early machine learning approaches, to state-of-the-art deep learning
+architectures employing convolutional neural networks (CNNs), long
+short-term memory (LSTM) networks, and Transformer models. Special
+attention is given to the cell-free architecture and the unique
+challenges it introduces: irregular access point (AP) topology,
+distributed processing constraints, and the need for computationally
+efficient edge-deployable models. The survey synthesises findings from
+over twenty peer-reviewed publications and identifies the critical
+research gap that the proposed project seeks to address: the absence
+of lightweight, multi-step predictive CNN architectures specifically
+designed for the spatially irregular, distributed topology of cell-free
+massive MIMO systems under high user mobility.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Introduction}
+
+The demand for wireless connectivity has grown exponentially over the
+past decade, driven by smartphones, IoT devices, autonomous vehicles,
+and immersive extended reality applications. Fifth-generation (5G)
+networks, while a substantial leap forward, are insufficient to meet
+the projected traffic densities and latency requirements of the 2030
+horizon. Sixth-generation (6G) networks are therefore under active
+research, targeting terabit-per-second peak data rates, sub-millisecond
+latency, and near-universal seamless coverage~\cite{Wang2024tutorial}.
+
+Two of the most promising enabling technologies for 6G are massive
+multiple-input multiple-output (mMIMO) systems and the cell-free (CF)
+network architecture. Massive MIMO exploits large antenna arrays
+--- typically 64 to 256 antennas per base station --- to serve many
+users simultaneously through spatial multiplexing and
+beamforming~\cite{Lu2014overview}. The cell-free paradigm extends this
+concept by distributing a large number of access points (APs) across a
+wide geographical area, all connected to a centralised processing unit
+(CPU), collectively serving users without cell
+boundaries~\cite{Ngo2017cellfree, Elhoushy2022survey}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.90\linewidth]{figures/fig_channel_aging.pdf}
+  \caption{The channel aging problem: the channel state measured at
+  pilot time ($\tilde{\bH}$) becomes outdated by the time precoding
+  is applied, leading to beam misalignment and throughput loss.}
+  \label{fig:aging}
+\end{figure}
+
+A fundamental operational requirement for both massive MIMO and
+cell-free systems is accurate, real-time knowledge of the channel state
+information (CSI) at the transmitter. CSI describes the complex
+propagation characteristics between each transmit antenna and each user
+device, encoding how the signal is attenuated, delayed, and
+phase-shifted as it travels through the wireless environment. In
+time-division duplex (TDD) systems, the transmitter estimates the
+downlink channel by exploiting uplink-downlink reciprocity: the user
+device transmits known pilot sequences, and the AP measures how these
+pilots were distorted to reconstruct the channel matrix
+$\bH \in \CC^{N \times K}$, where $N$ is the number of antennas and
+$K$ is the number of subcarriers.
+
+The critical challenge, illustrated in Figure~\ref{fig:aging}, is that
+the process of pilot transmission, channel estimation, and precoder
+computation takes several milliseconds. During this processing delay,
+the physical environment changes --- users move, doors open, vehicles
+pass --- causing the estimated channel $\tilde{\bH}$ to become stale
+relative to the true channel at the time of data transmission. This
+phenomenon is known as \textit{channel aging}, and it directly degrades
+beamforming performance, spectral efficiency, and system
+reliability~\cite{Zheng2021impact}.
+
+Channel aging is particularly pronounced in cell-free systems for two
+compounding reasons~\cite{Freitas2025ekf}: (1) centralised precoding
+requires all AP-to-user channel matrices to be gathered at the CPU,
+introducing additional fronthaul delays on top of the estimation delay;
+and (2) the distributed architecture means that each user is tracked
+by multiple independently aging channel links, all of which must remain
+coherent for joint transmission to succeed.
+
+This survey reviews the body of literature addressing channel aging
+mitigation through predictive channel state estimation, with the goal
+of establishing the research context and identifying the gap that
+motivates the proposed project.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Massive MIMO: Foundations and Channel Estimation}
+
+\subsection{Overview of Massive MIMO}
+
+The concept of massive MIMO was formally popularised by Marzetta (2010)
+and subsequently analysed in depth by Lu \textit{et al.}
+\cite{Lu2014overview}. The fundamental insight is that as the number of
+base station antennas $N$ grows large while the number of served users
+$K$ remains fixed, inter-user interference averages out and the system
+approaches a regime of near-orthogonal user channels. This allows simple
+linear precoders such as maximum ratio transmission (MRT) to approach
+optimal performance, substantially reducing computational
+requirements~\cite{Lu2014overview}.
+
+By the time of 5G standardisation, massive MIMO with 64-element active
+antenna units had been commercially deployed in sub-6\,GHz bands.
+Looking towards 6G, the concept has been extended to extremely
+large-scale MIMO (XL-MIMO) with hundreds to thousands of antennas,
+as surveyed in~\cite{Wang2024tutorial}, introducing additional
+challenges in near-field propagation and spatially non-stationary
+channel behaviour.
+
+\subsection{Classical Channel Estimation Methods}
+
+Channel estimation in massive MIMO systems relies on pilot sequences:
+the user device transmits a known signal of length $\tau_p$ symbols,
+and the receiver computes the channel estimate from the received pilot
+observations. Two classical estimators are widely used:
+
+\subsubsection{Least Squares (LS) Estimation}
+The LS estimator computes:
+\begin{equation}
+  \hat{\bH}^{\mathrm{LS}} = \bY_p \bPhi^{\dagger}
+\end{equation}
+where $\bY_p$ is the received pilot matrix and $\bPhi$ is the pilot
+sequence matrix. The LS estimator is unbiased and computationally
+efficient but noise-amplifying.
+
+\subsubsection{MMSE Estimation}
+The minimum mean square error (MMSE) estimator incorporates channel
+statistics to minimise the expected squared error:
+\begin{equation}
+  \hat{\bH}^{\mathrm{MMSE}} = \bR_H \!\left(\bR_H + \frac{\sigma_n^2}{\rho}\bI\right)^{\!-1}\!\hat{\bH}^{\mathrm{LS}}
+\end{equation}
+where $\bR_H$ is the channel covariance matrix and $\rho$ is the pilot
+signal-to-noise ratio (SNR). The MMSE estimator achieves significantly
+better performance but requires knowledge of $\bR_H$, which is often
+estimated from historical observations~\cite{Li2025survey}.
+
+Both methods, however, produce \textit{instantaneous} estimates that
+do not account for the temporal evolution of the channel. They are
+estimation methods, not prediction methods, and thus do not address
+the channel aging problem.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{The Channel Aging Problem}
+
+\subsection{Mathematical Formulation}
+
+The time-varying wireless channel is commonly modelled using Jake's
+isotropic scattering model~\cite{Kim2021kalman}. Under this model, the
+channel at time step $t+\delta$ is related to the channel at time $t$
+through the normalised Doppler frequency $f_D = f_c v / c$, where $f_c$
+is the carrier frequency, $v$ is the user velocity, and $c$ is the speed
+of light. The temporal correlation coefficient is:
+\begin{equation}
+  \rho(\delta) = J_0\!\left(2\pi f_D \delta T_s\right)
+\end{equation}
+where $J_0(\cdot)$ is the zeroth-order Bessel function of the first kind
+and $T_s$ is the sampling interval. As $\delta$ increases --- as more
+time passes between channel measurement and data transmission ---
+$\rho(\delta)$ decays, quantifying how quickly the channel becomes
+outdated.
+
+The normalised Doppler frequency $f_n = f_D T_s$ is a key parameter.
+Table~\ref{tab:doppler} illustrates the channel coherence degradation
+at different user velocities for a 3.5\,GHz 5G-NR carrier.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Normalised Doppler frequency and correlation coefficient at
+  3.5\,GHz for different user velocities (5\,ms processing delay assumed).}
+  \label{tab:doppler}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{Velocity (km/h)} & \textbf{$f_D$ (Hz)} & \textbf{$f_n$} & \textbf{$\rho(\delta)$} \\
+    \midrule
+    3   (pedestrian)   & 9.7   & $4.9\times10^{-5}$ & $\approx 1.00$ \\
+    30  (urban)        & 97.2  & $4.9\times10^{-4}$ & $\approx 0.98$ \\
+    60  (suburban)     & 194.4 & $9.7\times10^{-4}$ & $\approx 0.94$ \\
+    120 (highway)      & 388.9 & $1.9\times10^{-3}$ & $\approx 0.77$ \\
+    300 (high-speed rail) & 972.2 & $4.9\times10^{-3}$ & $\approx 0.32$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Impact on Spectral Efficiency}
+
+The work of Zheng \textit{et al.}~\cite{Zheng2021impact} provided the
+first comprehensive closed-form analysis of channel aging in cell-free
+massive MIMO systems. They derived spectral efficiency (SE) expressions
+incorporating both imperfect channel estimation and aging under
+spatially correlated channels, finding that:
+\begin{itemize}[nosep]
+  \item Channel aging causes monotonically decreasing SE as the Doppler
+        spread increases.
+  \item Cell-free systems, while inherently more resilient to aging
+        than small-cell systems due to macrodiversity, still suffer
+        meaningful SE losses at moderate-to-high user velocities.
+  \item Statistical channel cooperation power control (SCCPC) partially
+        mitigates aging effects but its gains erode as aging intensifies.
+\end{itemize}
+
+Similarly, the empirical measurement study by
+L\"{o}schenbrand \textit{et al.}~\cite{Loschenbrand2022measurement}
+provided real-world validation of channel aging effects in a widely
+distributed cell-free array with 32 BS antennas and vehicular users
+moving at 15--60\,km/h, confirming analytical predictions and
+demonstrating that aging is a practical concern, not merely a
+theoretical artefact.
+
+\subsection{Cell-Free Specific Aggravating Factors}
+
+In a conventional cellular system, the antenna array is co-located,
+and the spatial structure of the channel is well-defined relative to a
+single array geometry. In a cell-free system, APs are deployed on lamp
+posts, building facades, and bus shelters --- positions determined by
+urban infrastructure rather than signal processing optimality. As a
+result, the inter-AP spatial correlation structure is \textit{irregular},
+and channel prediction models designed for regular antenna array
+geometries do not directly transfer~\cite{DeFilippo2024cellfree}.
+
+The work of Freitas \textit{et al.}~\cite{Freitas2025ekf} was among
+the first to explicitly address channel aging in cell-free MIMO from a
+prediction perspective, proposing an extended Kalman filter (EKF)-based
+directional CSI prediction scheme operating under high Doppler
+conditions. While effective, the EKF approach requires precise
+parametric channel modelling, which is difficult to maintain as the
+propagation environment changes dynamically.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Cell-Free Massive MIMO: Architecture and Challenges}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.90\linewidth]{figures/fig_architecture.pdf}
+  \caption{Architecture comparison: (a) conventional cellular network
+  with one base station per cell; (b) cell-free network with distributed
+  APs cooperating to serve all users simultaneously without cell
+  boundaries.}
+  \label{fig:architecture}
+\end{figure}
+
+\subsection{System Model}
+
+As illustrated in Figure~\ref{fig:architecture}, a cell-free massive
+MIMO system consists of $L$ single- or multi-antenna APs distributed
+across a geographical area, connected via fronthaul links to a CPU.
+All $L$ APs simultaneously serve $K$ user equipment (UE) devices using
+the same time-frequency resources. The received signal at the CPU from
+user $k$ on subcarrier $m$ is:
+\begin{equation}
+  \mathbf{y}_{k,m} = \sum_{l=1}^{L} \mathbf{h}_{lk,m}\, x_k
+    + \sum_{j \neq k} \sum_{l=1}^{L} \mathbf{h}_{lj,m}\, x_j + \mathbf{n}
+\end{equation}
+where $\mathbf{h}_{lk,m} \in \CC^{N_l}$ is the channel vector between
+AP $l$ and user $k$ on subcarrier $m$, $x_k$ is the transmitted symbol
+from user $k$, and $\mathbf{n}$ is additive noise.
+
+A comprehensive survey of this architecture, covering fronthaul design,
+scalability, and 5G/6G integration, is provided in
+\cite{Elhoushy2022survey}. The seminal work by Ngo \textit{et al.}
+\cite{Ngo2017cellfree} demonstrated that cell-free systems offer
+5-fold and 10-fold improvements over conventional massive MIMO and
+small-cell systems, respectively, in terms of 95th-percentile per-user
+throughput. More recent work has extended the architecture to integrate
+reconfigurable intelligent surfaces (RIS)~\cite{Shi2024ris} and to
+support ultra-reliable low-latency communications (URLLC) for
+6G~\cite{Ajmal2024survey}.
+
+\subsection{Channel Estimation in Cell-Free Systems}
+
+Channel estimation in cell-free systems follows a TDD pilot-based
+protocol. In the uplink training phase, each user transmits pilot
+sequences and each AP estimates the channels from all users
+simultaneously. The joint channel matrix across all APs is:
+\begin{equation}
+  \bH = \begin{bmatrix} \bH_1^\top & \bH_2^\top & \cdots & \bH_L^\top \end{bmatrix}^\top
+  \in \CC^{\sum_l N_l \times K}
+\end{equation}
+where $\bH_l \in \CC^{N_l \times K}$ is the channel sub-matrix for
+AP $l$.
+
+A key challenge is \textit{pilot contamination}: when the number of
+users $K$ exceeds the pilot sequence length $\tau_p$, pilots must be
+reused across users, causing inter-user interference in channel
+estimates. While pilot contamination has been extensively studied in
+conventional massive MIMO~\cite{Guo2024joint}, it interacts with
+channel aging in cell-free systems in ways that are not yet fully
+characterised in the literature.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Model-Based Channel Prediction Methods}
+
+\subsection{Autoregressive Models}
+
+The autoregressive (AR) model represents the channel as a linear
+combination of its past values plus a stochastic innovation:
+\begin{equation}
+  \bh_t = \sum_{p=1}^{P} \bA_p\, \bh_{t-p} + \mathbf{e}_t
+\end{equation}
+where $\bA_p$ are the AR coefficient matrices of order $P$ and
+$\mathbf{e}_t$ is a zero-mean white noise innovation term. The AR
+parameters are estimated from observed channel data using the
+Yule-Walker equations or least squares~\cite{Kim2021kalman}.
+
+AR models provide a computationally efficient prediction baseline.
+However, their performance degrades rapidly under high mobility because
+the channel correlation structure changes faster than the AR parameters
+can be updated. Furthermore, they assume stationarity over the
+estimation window, which fails in environments with abrupt changes in
+the scattering geometry.
+
+\subsection{Kalman Filter-Based Prediction}
+
+The Kalman filter (KF) is the optimal linear predictor for linear
+Gaussian dynamical systems. By casting the AR model in state-space
+form, the KF recursively updates the channel prediction as new pilot
+observations arrive~\cite{Kashyap2017kalman}:
+\begin{align}
+  \hat{\bh}_{t|t-1} &= \bF\,\hat{\bh}_{t-1|t-1} \\
+  \hat{\bh}_{t|t}   &= \hat{\bh}_{t|t-1} + \bK_t\!\left(\bh_t^{\mathrm{obs}} - \hat{\bh}_{t|t-1}\right)
+\end{align}
+where $\bF$ is the state transition matrix derived from the AR
+coefficients, and $\bK_t$ is the Kalman gain.
+
+The work of Kashyap \textit{et al.}~\cite{Kashyap2017kalman}
+established the Kalman filter as an effective channel predictor for TDD
+massive MIMO, showing that ARMA-based predictors can substantially
+increase pilot spacing while maintaining acceptable spectral efficiency.
+The vector Kalman filter (VKF) of Kim \textit{et al.}~\cite{Kim2021kalman}
+extended this to the multi-antenna case and provided a comparative
+benchmark against machine learning approaches.
+
+The EKF-based predictor of Freitas \textit{et al.}~\cite{Freitas2025ekf}
+represented the first dedicated Kalman-based predictor for cell-free
+MIMO. However, Kalman-based methods share a fundamental limitation:
+they require channel model parameters (AR coefficients, noise covariance)
+to be estimated and updated in real time, creating a computational
+overhead that scales with the number of APs and users --- a significant
+scaling problem in cell-free systems with $L = 50$--$200$ APs.
+
+\subsection{Wiener Filter and ARMA Predictors}
+
+Wiener filtering provides the minimum mean-square-error linear predictor
+of a stationary stochastic process. While theoretically optimal for
+stationary channels, its implementation requires full knowledge of the
+channel's power spectral density, which is environment-dependent and
+must be estimated adaptively. ARMA-based predictors approximate the
+Wiener filter by fitting a higher-order model to the observed temporal
+correlation~\cite{Kashyap2017kalman}. These methods show good
+performance in low-to-medium mobility scenarios but degrade at high
+velocities where the stationarity assumption breaks down.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Deep Learning for Channel Estimation and Feedback}
+
+\subsection{CsiNet: The Foundational Deep Learning CSI Architecture}
+
+The breakthrough paper by Wen \textit{et al.}~\cite{Wen2018csinet}
+introduced CsiNet, the first deep learning architecture for CSI
+compression and feedback in FDD massive MIMO. CsiNet uses a CNN-based
+autoencoder: the encoder (at the user side) compresses the channel
+matrix into a compact codeword, and the decoder (at the base station)
+reconstructs the full CSI from the codeword.
+
+CsiNet demonstrated that CNNs can learn efficient representations of
+the spatial structure of CSI matrices, significantly outperforming
+compressed sensing-based methods at high compression ratios. Its
+success established the paradigm of treating the channel matrix as an
+image-like 2D structure amenable to convolutional processing --- a
+paradigm directly applicable to channel prediction.
+
+Building on CsiNet, Wang \textit{et al.}~\cite{Wang2019csinetlstm}
+introduced CsiNet-LSTM, which augments the CsiNet architecture with
+LSTM cells to exploit temporal correlations across consecutive channel
+snapshots. CsiNet-LSTM significantly improves reconstruction quality
+in time-varying channels by learning both spatial structure (via CNN)
+and temporal dynamics (via LSTM), establishing the hybrid
+spatial-temporal architecture as a natural design paradigm for
+channel-related deep learning tasks.
+
+\subsection{Deep CNN for Wideband Channel Estimation}
+
+Dong \textit{et al.} proposed a deep CNN specifically for wideband
+millimetre wave (mmWave) massive MIMO channel estimation, exploiting
+the frequency correlation structure across OFDM subcarriers. Their
+architecture processes the channel matrix across antenna and frequency
+dimensions simultaneously, extracting both spatial and spectral
+features. This work demonstrated that the multi-dimensional structure
+of the channel matrix
+($N_{\mathrm{ant}} \times N_{\mathrm{sub}} \times N_{\mathrm{time}}$)
+is naturally suited to 3D convolutional processing.
+
+A lightweight variant was later proposed by Tian
+\textit{et al.}~\cite{Tian2025hybrid}, who combined CNN with LSTM
+in a regularisation-enhanced hybrid architecture for massive MIMO
+channel estimation, demonstrating improved robustness to noise while
+maintaining lower computational complexity than Transformer-based
+competitors.
+
+\subsection{Joint Channel Estimation and Feedback}
+
+Guo \textit{et al.}~\cite{Guo2024joint} proposed a unified deep
+learning framework that jointly performs channel estimation,
+compression, and feedback in a single end-to-end trained network,
+avoiding the suboptimality introduced by separately optimising each
+module. Their framework achieves better spectral efficiency than
+two-stage approaches while reducing overall latency --- an important
+property for channel-aging-aware systems.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Machine Learning for Channel Prediction}
+
+\subsection{Early ML-Based Prediction: MLP and Basic CNN}
+
+The systematic comparison study of Kim \textit{et al.}~\cite{Kim2021kalman}
+was the first to compare Kalman filter and machine learning approaches
+for massive MIMO channel prediction on realistic 3GPP spatial channel
+model (SCM) channels. Their results established several important benchmarks:
+\begin{itemize}[nosep]
+  \item A multilayer perceptron (MLP) with LMMSE pre-processing
+        approaches the performance of the VKF at low complexity.
+  \item A CNN-AR architecture (CNN with autoregressive pre-processing)
+        outperforms CNN-RNN in low-to-medium mobility scenarios.
+  \item All ML-based architectures degrade at high normalised Doppler
+        ($f_n > 0.2$), indicating the need for more powerful models.
+\end{itemize}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.90\linewidth]{figures/fig_pipeline.pdf}
+  \caption{Proposed CNN-based channel prediction pipeline: a sequence of
+  past CSI matrices is fed into the CNN, which outputs the predicted
+  future channel state $\hat{\bH}_{t+k}$ for use in precoding.}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{CNN-Based Real-Time Prediction for High-Speed Scenarios}
+
+Targeting high-speed railway and vehicular scenarios, a novel real-time
+CNN channel prediction algorithm was proposed in~\cite{CNN2022realtime},
+which uses reference signal-based online training to continuously adapt
+to non-stationary channel variations. The algorithm updates its model
+using only the most recent pilot observations, enabling tracking of
+fast time-varying channels in LTE and 5G OFDM systems without
+requiring pre-collected training datasets.
+
+This work demonstrated that CNNs can learn the temporal feature
+structure of channels directly from reference signals, making them
+suitable for online deployment --- a property important for cell-free
+systems where channel conditions vary continuously across the distributed
+AP topology.
+
+\subsection{Wideband Channel Prediction and Frequency Correlation}
+
+The machine learning channel prediction study of Ko
+\textit{et al.}~\cite{Ko2022wideband} explored wideband massive MIMO
+channel prediction, proposing domain transformation techniques to reduce
+redundancy across subcarrier channels. Their joint learning approach
+trains a single predictor across all subcarriers, exploiting frequency
+correlation to reduce data requirements and improve generalisation. This
+work also identified ML-based channel prediction for cell-free massive
+MIMO as an explicit future research direction, noting that the
+combination of wideband operation, distributed AP topology, and high
+mobility creates a prediction problem qualitatively different from
+single-cell massive MIMO.
+
+\subsection{Hybrid CNN-LSTM Architectures}
+
+The work of Nguyen \textit{et al.}~\cite{Nguyen2023cnnlstm} proposed
+a CNN-LSTM model for channel estimation in RIS-NOMA assisted 6G
+networks, demonstrating that combining CNN (for spatial feature
+extraction) with LSTM (for temporal sequence modelling) yields superior
+performance compared to either component alone. The model was shown to
+be robust to varying system parameters including transmit SNR, power
+allocation, and the number of RIS elements --- a form of generalisation
+desirable for cell-free systems where channel statistics vary across
+AP locations.
+
+Building on similar principles, the uplink OFDM channel predictor
+of De Filippo \textit{et al.}~\cite{DeFilippo2024cellfree} extended
+the CNN-LSTM encoder-decoder framework with skip connections for 6G
+non-terrestrial networks, predicting the channel frequency response
+matrix for entire OFDM slots without pilots. While targeted at
+satellite scenarios, this work directly demonstrated the viability of
+CNN-LSTM prediction for distributed, multi-AP scenarios.
+
+\subsection{Mobile Cell-Free MIMO: Prediction Challenges}
+
+The mobile cell-free massive MIMO challenges survey by Zheng
+\textit{et al.}~\cite{Zheng2023mobile} reviewed prediction methods
+in the context of distributed systems. They noted that both Kalman
+filter and ML-based predictors degrade in high-mobility scenarios
+beyond prediction horizons of approximately 0.1--0.3 wavelengths.
+They proposed the concept of the ``predictor antenna'' --- a
+physically forward-deployed antenna that observes the channel the
+mobile unit will encounter in the near future --- as an alternative
+paradigm, but acknowledged that this approach requires hardware
+modifications to the AP infrastructure, limiting its practical appeal.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Transformer and Attention-Based Approaches}
+
+\subsection{Transformer-Based Channel Prediction}
+
+The Transformer-based channel predictor of Jiang \textit{et al.}
+\cite{Jiang2022transformer} represented a significant advance,
+proposing a parallel synchronous prediction framework that simultaneously
+predicts multiple future channel frames rather than sequentially
+predicting one step at a time. Their hybrid attention mechanism combines
+self-attention across the time dimension with positional encoding
+adapted to channel statistics, achieving prediction NMSE below
+$-15$\,dB for user speeds up to 60\,km/h on 3GPP CDL-B and UMa
+channel models.
+
+However, the Transformer architecture introduced several practical
+limitations in the cell-free context:
+\begin{enumerate}[nosep]
+  \item Computational complexity is $\mathcal{O}(L^2)$ in sequence
+        length, which becomes prohibitive for long prediction horizons.
+  \item The model size (millions of parameters) is incompatible with
+        deployment on resource-constrained edge hardware at distributed APs.
+  \item The model requires extensive matched-condition training data
+        and exhibits reduced generalisation across different channel
+        environments.
+\end{enumerate}
+
+A subsequent study on space-time-frequency correlation exploitation
+for cell-free MIMO~\cite{Ko2022wideband} reinforced this conclusion,
+noting that FreqConv and SpaceConv based Transformer encoders --- while
+achieving excellent accuracy in centralised systems --- face practical
+difficulty in extracting spatial correlations under the irregular AP
+deployment geometry characteristic of cell-free networks.
+
+\subsection{Attention Mechanisms for Selective Estimation}
+
+Gao \textit{et al.}~\cite{Gao2021attention} proposed an attention-aided
+deep learning framework for massive MIMO channel estimation that uses a
+``divide-and-conquer'' strategy: an attention mechanism first identifies
+the most informative angular regions of the channel, then focuses
+estimation resources on those regions. This attention-guided approach
+substantially improves estimation accuracy for channels with narrow
+angular spread at modest complexity overhead. The result suggests that
+selective attention mechanisms can complement lightweight CNN
+architectures without prohibitive computational cost --- an idea
+potentially applicable in the proposed cell-free prediction design.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{AI-Native Physical Layer Design for 6G}
+
+The concept of AI-native physical layer design represents a paradigm
+shift in wireless communication: rather than applying machine learning
+as a post-hoc optimisation on conventionally designed systems, the
+physical layer is designed from the ground up to be learned and adapted
+by AI models. This vision, articulated in the 6G research community
+and partly incorporated into 3GPP Release 18 standardisation activities
+for 5G-Advanced, encompasses AI-based channel estimation, AI-based
+channel prediction, AI-based beamforming, and AI-based modulation and
+coding~\cite{overview6G2024}.
+
+In this context, lightweight CNN-based channel prediction is not merely
+a technical optimisation problem but a fundamental building block of
+the AI-native physical layer. The proposed research contributes to
+this vision by demonstrating that computationally efficient deep
+learning can replace or substantially outperform classical model-based
+predictors even in the most demanding deployment scenario: the
+spatially distributed, high-mobility cell-free network.
+
+The challenges and opportunities of machine learning for future wireless
+communications, including channel prediction for cell-free systems,
+are comprehensively reviewed in~\cite{ML2025future}. That survey
+explicitly lists wideband CSI prediction for cell-free massive MIMO
+exploiting space-time-frequency correlations as an open research
+problem, directly validating the novelty and timeliness of the
+proposed project.
+
+The broader 6G AI and communication landscape is surveyed
+in~\cite{overview6G2024}, which further contextualises the need for
+edge-deployable, lightweight inference models. Given that cell-free
+networks push intelligence to the network edge --- to individual APs
+with constrained compute resources --- the ``lightweight'' requirement
+in the proposed problem statement is not merely a performance goal but
+a fundamental deployment constraint.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Performance Comparison and Research Gap Analysis}
+
+\subsection{NMSE Comparison Across Methods}
+
+Figure~\ref{fig:nmse} presents a representative comparison of the
+normalised mean square error (NMSE) achieved by the major channel
+prediction approaches reviewed in this survey under low and high
+mobility conditions. Values are drawn from the simulation results
+reported in the cited papers and are presented as illustrative rather
+than directly comparable, since exact results depend on simulation
+parameters, channel models, and system configurations.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\linewidth]{figures/fig_nmse.pdf}
+  \caption{Representative NMSE comparison (lower is better) across
+  channel prediction approaches under low and high user mobility.
+  Values are approximate, drawn from the cited literature; exact
+  figures depend on simulation setup.}
+  \label{fig:nmse}
+\end{figure}
+
+The key observation is that while Transformer-based models achieve the
+best NMSE in centralised massive MIMO, their computational footprint
+is incompatible with edge-deployed cell-free APs. The CNN-AR
+architecture of Kim \textit{et al.}~\cite{Kim2021kalman} achieves
+strong performance at moderate mobility with significantly lower
+complexity, making it the most architecturally appropriate starting
+point for a lightweight cell-free predictor.
+
+\subsection{Comprehensive Method Comparison}
+
+Table~\ref{tab:comparison} summarises the key properties of the
+reviewed prediction methods along dimensions relevant to cell-free
+deployment.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparison of channel prediction methods relevant to
+  cell-free massive MIMO deployment. Ratings: \textbf{H}=High,
+  \textbf{M}=Medium, \textbf{L}=Low, \textbf{Y}=Yes, \textbf{N}=No.}
+  \label{tab:comparison}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{
+    >{\raggedright\arraybackslash}p{3.3cm}
+    >{\centering\arraybackslash}p{1.5cm}
+    >{\centering\arraybackslash}p{1.5cm}
+    >{\centering\arraybackslash}p{1.6cm}
+    >{\centering\arraybackslash}p{1.8cm}
+    >{\centering\arraybackslash}p{1.8cm}
+  }
+    \toprule
+    \textbf{Method} &
+    \textbf{Pred.\newline Accuracy} &
+    \textbf{Complexity} &
+    \textbf{Multi-step} &
+    \textbf{CF-MIMO\newline tested} &
+    \textbf{Edge\newline deployable} \\
+    \midrule
+    AR Model                & L--M & Very L  & N       & N   & Y \\
+    Kalman Filter           & M    & M       & Limited & N   & Part. \\
+    EKF~\cite{Freitas2025ekf} & M  & M       & N       & Y   & Part. \\
+    MLP                     & M    & L       & N       & N   & Y \\
+    CsiNet~\cite{Wen2018csinet} & M--H & M   & N       & N   & Part. \\
+    CsiNet-LSTM~\cite{Wang2019csinetlstm} & H & M & Y  & N   & Part. \\
+    CNN-AR~\cite{Kim2021kalman} & H & L--M   & Limited & N   & Y \\
+    CNN-LSTM~\cite{Nguyen2023cnnlstm} & H & M & Y     & N   & Part. \\
+    Transformer~\cite{Jiang2022transformer} & VH & H & Y & N & N \\
+    \midrule
+    \textbf{Proposed}       & \textbf{H} & \textbf{L} & \textbf{Y} & \textbf{Y} & \textbf{Y} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Identified Research Gap}
+
+The survey reveals a specific and well-bounded research gap:
+\textbf{no existing work has proposed a multi-step predictive CNN
+architecture specifically designed for the spatially irregular topology
+of distributed cell-free massive MIMO systems, with computational
+efficiency suitable for edge deployment at each AP.}
+
+Specifically, existing works fail to simultaneously satisfy all of the
+following requirements:
+
+\begin{enumerate}
+  \item \textbf{Multi-step prediction.} Most CNN and Kalman-based
+        works predict only one step ahead. Multi-step prediction is
+        critical in cell-free systems where fronthaul delays compound
+        the inherent channel aging.
+
+  \item \textbf{Spatially irregular AP topology.} Cell-free APs are
+        irregularly placed. Standard CNNs assume regular grid structure.
+        A CNN architecture accounting for the irregular geometry of
+        distributed APs is required.
+
+  \item \textbf{Computational efficiency.} Transformer and large
+        CNN-LSTM models cannot be deployed on resource-constrained AP
+        hardware in real time. A lightweight architecture with
+        sub-millisecond inference and a parameter count in the tens of
+        thousands --- rather than millions --- is needed.
+
+  \item \textbf{High user mobility.} Most ML-based predictors are
+        evaluated at low-to-medium mobility ($< 30$\,km/h). High
+        mobility scenarios ($> 60$\,km/h), relevant for vehicular 6G
+        use cases, remain a significant challenge for lightweight models.
+\end{enumerate}
+
+The proposed research directly and completely addresses all four of these
+requirements simultaneously, which no prior work has done.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\section{Conclusions}
+
+This literature survey has traced the evolution of channel prediction
+research from classical AR and Kalman filter methods, through the
+landmark CsiNet architecture, to state-of-the-art Transformer-based
+predictors. The key findings are summarised as follows:
+
+\begin{enumerate}
+  \item \textbf{Channel aging is a critical, practically validated
+        problem} in cell-free massive MIMO, with compounding causes
+        beyond those in conventional systems.
+
+  \item \textbf{Classical model-based predictors} (AR, Kalman) are
+        computationally tractable but rely on stationarity assumptions
+        that fail in dynamic environments and at high mobility.
+
+  \item \textbf{Deep learning} has substantially advanced channel
+        estimation and feedback, with CsiNet establishing the paradigm
+        of CNN-based spatial feature extraction for CSI matrices.
+
+  \item \textbf{Hybrid CNN-LSTM architectures} represent the current
+        practical sweet spot, combining spatial feature extraction with
+        temporal sequence modelling at moderate computational cost.
+
+  \item \textbf{Transformer-based predictors} achieve the best accuracy
+        but are computationally unsuitable for edge deployment at
+        distributed cell-free APs.
+
+  \item \textbf{The specific problem of lightweight, multi-step channel
+        prediction for spatially irregular, distributed cell-free MIMO
+        under high mobility remains an open research problem,} as
+        confirmed by multiple 2023--2025 surveys.
+\end{enumerate}
+
+The proposed research --- a lightweight, computationally efficient CNN
+designed for the spatially irregular topology of cell-free massive MIMO,
+performing multi-step forward channel state prediction under high user
+mobility --- directly addresses this gap and makes a timely,
+well-motivated contribution to the 6G research agenda.
+
+%% ═══════════════════════════════════════════════════════════════════════
+\newpage
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

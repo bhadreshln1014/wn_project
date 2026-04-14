@@ -1,0 +1,22 @@
+{
+  "GNN-CNN": {
+    "params": 51008,
+    "latency_mean_ms": 0.781,
+    "latency_std_ms": 0.077
+  },
+  "CNN-Only": {
+    "params": 46848,
+    "latency_mean_ms": 0.607,
+    "latency_std_ms": 0.036
+  },
+  "AR": {
+    "params": 1024,
+    "latency_mean_ms": 9.944,
+    "latency_std_ms": 0.662
+  },
+  "Kalman": {
+    "params": 256,
+    "latency_mean_ms": 14.386,
+    "latency_std_ms": 0.819
+  }
+}

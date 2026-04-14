@@ -1,0 +1,11 @@
+{
+  "layouts": [
+    "random",
+    "grid"
+  ],
+  "velocity": 60.0,
+  "results": {
+    "random": -0.6374644488096237,
+    "grid": -1.1965752393007278
+  }
+}

@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Deep Learning / Data
+*.pt
+*.pth
+# Uncomment to ignore data and checkpoint directories completely:
+# data/
+# checkpoints/
+# kaggle_working_backup_*/
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.brf
+*.lof
+*.lot
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Archive / Compressed files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.gz
+*.7z
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
