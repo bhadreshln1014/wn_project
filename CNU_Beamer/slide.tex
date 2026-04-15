@@ -88,6 +88,49 @@
     \end{itemize}
 \end{frame}
 
+\section[Procedure]{Project Procedure}
+
+\begin{frame}{Procedure Overview: End-to-End Pipeline}
+    \small
+    \begin{enumerate}
+        \item Define simulation settings: AP/UE counts, mobility, topology, history horizon, prediction horizon.
+        \item Generate channel dataset with geometry-aware fading model.
+        \item Build graph connectivity (KNN) for the GNN-CNN path.
+        \item Train models (CNN-Only and GNN-CNN) for each layout and velocity setup.
+        \item Test against AR and VKF baselines on held-out data.
+        \item Run full evaluation suite and export plots/JSON summaries.
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Procedure Step 1: Dataset Generation}
+    \footnotesize
+    \begin{itemize}
+        \item AP layouts: random and grid; user mobility at 30/60/120 km/h.
+        \item Large-scale fading: pathloss + spatially correlated shadowing.
+        \item Small-scale fading: geometry-based multi-path temporal evolution.
+        \item Sample format: input history $X \in \mathbb{R}^{L \times 2NK \times T_h}$, target $Y \in \mathbb{R}^{L \times 2NK \times T_p}$.
+        \item Dataset split used for experiments: train/validation/test.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Procedure Step 2-3: Training and Testing}
+    \scriptsize
+    \textbf{Training stage}
+    \begin{itemize}
+        \item Train both neural models for each (layout, velocity) configuration.
+        \item Use per-AP normalization in the forward path for stable learning.
+        \item Save checkpoints per model/configuration for reproducible evaluation.
+    \end{itemize}
+
+    \vspace{0.35em}
+    \textbf{Testing and analysis stage}
+    \begin{itemize}
+        \item Evaluate neural models and classical baselines on the test split only.
+        \item Metrics and studies: NMSE vs velocity, NMSE vs step, GCN ablation, topology ablation, efficiency.
+        \item Export artifacts: JSON metric files and publication-ready result plots.
+    \end{itemize}
+\end{frame}
+
 \section{Baselines}
 
 \begin{frame}{Baseline 1: AR Predictor}
